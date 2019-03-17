@@ -1,4 +1,4 @@
-package br.hackatona.reprograma;
+/*package br.hackatona.reprograma;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,3 +14,4 @@ public class HackatonaReprogramaApiApplicationTests {
 	}
 
 }
+*/
