@@ -74,24 +74,27 @@ public class AssistantServiceImpl implements AssistanteService {
 		JSONObject object = new JSONObject(jsonInString);
 		JSONObject output = object.getJSONObject("output");
 		JSONArray entities = output.getJSONArray("entities");
-		JSONArray intents = output.getJSONArray("entities");
+		JSONArray intents = output.getJSONArray("intents");
 
 		for (int i = 0; entities.length() > i; i++) {
 			JSONObject entity = entities.getJSONObject(i);
 			if (entity.getString("value").equals("data")) {
-				output.put("context", serviceImpl.getAll());
+				output.put("chart", "chart");
 			}
 		}
 		for (int i = 0; intents.length() > i; i++) {
 			JSONObject intenty = intents.getJSONObject(i);
-			if (intenty.getString("intents").equals("intent")) {
-				JSONObject contextObj = new JSONObject();
+			if (intenty.getString("intent").equals("custos")) {
+				JSONArray actions = new JSONArray();
 				JSONObject action = new JSONObject();
+				action.put("title", "Transporte");
+				action.put("payload", "transporte");
+				actions.put(action);
+				output.put("actions", actions);
 
-				action.put("tittle", "Transporte");
-				action.put(" payload", "transporte");
-				contextObj.put("action", action);
-
+			} else if (intenty.getString("intent").equals("transporte")) {
+				JSONObject action = new JSONObject();
+				output.put("chart", "chart-transporte");
 			}
 		}
 		object.put("sessionId", line.getSessionId());
