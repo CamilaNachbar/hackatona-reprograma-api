@@ -1,10 +1,14 @@
 package br.hackatona.reprograma.serviceImpl;
 
+import java.io.IOException;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.watson.developer_cloud.assistant.v2.Assistant;
 import com.ibm.watson.developer_cloud.assistant.v2.model.CreateSessionOptions;
 import com.ibm.watson.developer_cloud.assistant.v2.model.MessageContext;
@@ -17,55 +21,82 @@ import com.ibm.watson.developer_cloud.service.security.IamOptions;
 import br.hackatona.reprograma.model.AssistentModel;
 
 @Service
-@Transactional
+
 public class AssistantServiceImpl implements AssistanteService {
 
+	@Autowired
+	private ServiceImpl serviceImpl;
+
 	@Override
-	public MessageResponse assistantLello(AssistentModel line) throws JSONException {
+	public Object assistantLello(AssistentModel line) throws JSONException, IOException {
 
 		@SuppressWarnings({ "resource" })
 
 		IamOptions iamOptions = new IamOptions.Builder().apiKey("jzGsQVpfIrcH1rVgg20fjJ1jQTHmMM__Dqf1fBANseBl").build();
 		Assistant service = new Assistant("2018-11-08", iamOptions);
 		service.setEndPoint("https://gateway.watsonplatform.net/assistant/api");
-		CreateSessionOptions options = new CreateSessionOptions.Builder("ca4d095e-1895-48b5-9315-39125cc5b1fb").build();
 
-		SessionResponse response = service.createSession(options).execute();
+		if (line.getSessionId() == null) {
+			CreateSessionOptions options = new CreateSessionOptions.Builder("ca4d095e-1895-48b5-9315-39125cc5b1fb")
+					.build();
+			SessionResponse response = service.createSession(options).execute();
+			line.setSessionId(response.getSessionId());
+		}
 
-		MessageInput input = new MessageInput.Builder().text(line.getInput().getText()).build();
-
+		MessageInput input = null;
 		MessageOptions messageOptions;
+
+		if (line.getEntities() != null && line.getIntents() != null) {
+			input = new MessageInput.Builder().text(line.getText()).entities(line.getEntities())
+					.intents(line.getIntents()).build();
+		}
+		if (line.getIntents() != null) {
+			input = new MessageInput.Builder().text(line.getText()).intents(line.getIntents()).build();
+		}
+		if (line.getEntities() != null) {
+			input = new MessageInput.Builder().text(line.getText()).entities(line.getEntities()).build();
+		}
 
 		if (line.getContext() != null) {
 			messageOptions = new MessageOptions.Builder().assistantId("ca4d095e-1895-48b5-9315-39125cc5b1fb")
-					.sessionId(response.getSessionId()).input(input).context(line.getContext()).build();
-
+					.sessionId(line.getSessionId()).input(input).build();
 		} else {
+			input = new MessageInput.Builder().text(line.getText()).build();
 			messageOptions = new MessageOptions.Builder().assistantId("ca4d095e-1895-48b5-9315-39125cc5b1fb")
-					.sessionId(response.getSessionId()).input(input).build();
+					.sessionId(line.getSessionId()).input(input).context((MessageContext) line.getContext()).build();
 		}
 
-
-
 		MessageResponse messageResponse = service.message(messageOptions).execute();
-		return messageResponse;
 
-	}
+		ObjectMapper mapper = new ObjectMapper();
 
-	public JSONObject assistantMatching(String matchingText) throws JSONException, RuntimeException {
-		// retorna true caso as entidades conhecidam com o texto retornado do Discovery
+		String jsonInString = mapper.writeValueAsString(messageResponse);
+		JSONObject object = new JSONObject(jsonInString);
+		JSONObject output = object.getJSONObject("output");
+		JSONArray entities = output.getJSONArray("entities");
+		JSONArray intents = output.getJSONArray("entities");
 
-		Assistant service = new Assistant("2018-07-10");
-		service.setUsernameAndPassword("cdf02a35-735a-4ff7-8d6a-90e8d292a8df", "DW6sSsJo8jXF");
+		for (int i = 0; entities.length() > i; i++) {
+			JSONObject entity = entities.getJSONObject(i);
+			if (entity.getString("value").equals("data")) {
+				output.put("context", serviceImpl.getAll());
+			}
+		}
+		for (int i = 0; intents.length() > i; i++) {
+			JSONObject intenty = intents.getJSONObject(i);
+			if (intenty.getString("intents").equals("intent")) {
+				JSONObject contextObj = new JSONObject();
+				JSONObject action = new JSONObject();
 
-		/*
-		 * final String workspaceId = "e0f5b820-1bcb-4e05-8207-7964ecd6ac5d";
-		 * 
-		 * InputData input = new InputData.Builder(matchingText).build();
-		 */
-		// MessageOptions options = new
-		// MessageOptions.Builder(workspaceId).input(input).build();
-		return null; // new JSONObject(service.message(options).execute().toString());
+				action.put("tittle", "Transporte");
+				action.put(" payload", "transporte");
+				contextObj.put("action", action);
+
+			}
+		}
+		object.put("sessionId", line.getSessionId());
+
+		return mapper.readValue(object.toString(), Object.class);
 
 	}
 

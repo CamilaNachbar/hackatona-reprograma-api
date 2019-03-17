@@ -1,28 +1,30 @@
 package br.hackatona.reprograma.serviceImpl;
 
-import java.math.BigDecimal;
+import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.jdo.annotations.Transactional;
+
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import br.hackatona.reprograma.repository.PullRepository;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
-@Transactional
-public class ServiceImpl  implements br.hackatona.reprograma.serviceImpl.Service{
+public class ServiceImpl implements br.hackatona.reprograma.serviceImpl.Service {
 
-	@Autowired
-	public PullRepository pullRepository;
+	@Override
+	public Object getAll() throws JsonParseException, JsonMappingException, IOException {
 
-	public BigDecimal getPorcentagemDecosumo(BigDecimal user, BigDecimal otherUsers) {
+		String jsonObject = "{ \"cartao\": {\"numero\": \"123456789876543\",\"limite-total\": 5500 }, \"compras\": [ { \"valor\": 128.90, \"valorparcela\": null, "
+				+ "\"numeroparcela\": 0, \"data\": \"12/12/2018\", \"tipo\": { \"nome\": \"transporte\", \"prioridade\": 1  } }, "
+				+ "{ \"valor\": 120,\"valorparcela\": 60, \"numeroparcela\": 2,\"data\": \"12/12/2018\",\"tipo\": {\"nome\": \"transporte\","
+				+ " \"prioridade\": 1	  }	 } ], \"compras-por-tipo\": [ { \"valor\": 1200, \"tipo\": { \"nome\": \"transporte\",	\"prioridade\": 1	 } }, {	 \"valor\": 1200,"
+				+ " \"tipo\": {	\"nome\": \"alimentacao\",	 \"prioridade\": 3 } }], \"percentual-usuarios\":[ {\"valor-percentual\": 25.5,\"tipo\""
+				+ ": { \"nome\": \"alimentacao\",\"prioridade\": 3} }], \"percentual-pessoal\":[   { \"valor-percentual\": 25.5,   \"tipo\": {  \"nome\": \"alimentacao\", \"prioridade\": 3    }  } ]}";
 
-		return (otherUsers.multiply(new BigDecimal(100))).divide(user);
-
-	}
-
-	public Object getPorcentagemUsuarioPorTipo() {
-		return pullRepository.findAll();
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readValue(jsonObject.toString(), Object.class);
 	}
 
 }
