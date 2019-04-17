@@ -32,12 +32,12 @@ public class AssistantServiceImpl implements AssistanteService {
 
 		@SuppressWarnings({ "resource" })
 
-		IamOptions iamOptions = new IamOptions.Builder().apiKey("jzGsQVpfIrcH1rVgg20fjJ1jQTHmMM__Dqf1fBANseBl").build();
+		IamOptions iamOptions = new IamOptions.Builder().apiKey("--------").build();
 		Assistant service = new Assistant("2018-11-08", iamOptions);
 		service.setEndPoint("https://gateway.watsonplatform.net/assistant/api");
 
 		if (line.getSessionId() == null) {
-			CreateSessionOptions options = new CreateSessionOptions.Builder("ca4d095e-1895-48b5-9315-39125cc5b1fb")
+			CreateSessionOptions options = new CreateSessionOptions.Builder("-----")
 					.build();
 			SessionResponse response = service.createSession(options).execute();
 			line.setSessionId(response.getSessionId());
@@ -62,7 +62,7 @@ public class AssistantServiceImpl implements AssistanteService {
 					.sessionId(line.getSessionId()).input(input).build();
 		} else {
 			input = new MessageInput.Builder().text(line.getText()).build();
-			messageOptions = new MessageOptions.Builder().assistantId("ca4d095e-1895-48b5-9315-39125cc5b1fb")
+			messageOptions = new MessageOptions.Builder().assistantId(" ----------------- ")
 					.sessionId(line.getSessionId()).input(input).context((MessageContext) line.getContext()).build();
 		}
 
